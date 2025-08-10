@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>双语朗读器</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="一个功能强大的双语朗读器PWA应用">
+  <meta name="theme-color" content="#2196F3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="双语朗读器">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 1em;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    textarea {
+      width: 90vw;
+      height: 150px;
+      margin-bottom: 1em;
+    }
+    #sentenceBox {
+      width: 90vw;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 1em;
+      margin-bottom: 1em;
+      font-size: 1.2em;
+    }
+    .sentence {
+      margin: 0.5em 0;
+    }
+    .highlight {
+      background-color: #ffffcc;
+    }
+    #bookmarks {
+      margin-top: 1em;
+      border-top: 1px solid #ccc;
+      padding-top: 1em;
+      width: 90vw;
+    }
+    #recentFiles {
+      margin: 1em 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 1em;
+      width: 90vw;
+      background-color: #f9f9f9;
+    }
+    .recent-file-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5em;
+      margin: 0.3em 0;
+      background-color: white;
+      border: 1px solid #eee;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .recent-file-item:hover {
+      background-color: #e3f2fd;
+    }
+    .file-info {
+      flex: 1;
+    }
+    .file-name {
+      font-weight: bold;
+      color: #2196F3;
+    }
+    .file-position {
+      font-size: 0.9em;
+      color: #666;
+    }
+    .file-date {
+      font-size: 0.8em;
+      color: #999;
+    }
+    .delete-file {
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      padding: 0.2em 0.5em;
+      cursor: pointer;
+      font-size: 0.8em;
+    }
+    .delete-file:hover {
+      background: #cc0000;
+    }
+    button {
+      margin: 5px;
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+    input[type="range"] {
+      width: 90vw;
+    }
+  </style>
+</head>
+<body>
+	  <h2>PWA 安装日志控制台</h2>
+  <button id="installBtn">安装应用</button>
+  <pre id="log" style="background: #f0f0f0; padding: 1em; white-space: pre-wrap;"></pre>
+
+  <h2>📖 朗读器</h2>
+  <input type="file" id="fileInput" accept=".txt"><br>
+  
+  <!-- 最近打开的文件列表 -->
+  <div id="recentFiles" style="display: none;">
+    <strong>📂 最近打开的文件：</strong>
+    <div id="recentFilesList"></div>
+  </div>
+  
+  <button id="startBtn">▶️ 开始朗读</button>
+  <button id="pauseBtn">⏸️ 暂停</button>
+  <button id="bookmarkBtn">⭐ 添加书签</button>
+
+  <div>
+    <label for="speedRange">速度:</label>
+    <input type="range" id="speedRange" min="0.5" max="2" step="0.1" value="1">
+  </div>
+  <div>
+    <label for="volumeRange">音量:</label>
+    <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1">
+  </div>
+  <div>
+    <label for="progressRange">进度:</label>
+    <input type="range" id="progressRange" min="0" value="0" step="1">
+    <span id="progressLabel">第 0 句</span>
+  </div>
+
+  <div id="sentenceBox"></div>
+
+  <div id="bookmarks">
+    <strong>🔖 书签列表：</strong>
+    <ul id="bookmarkList"></ul>
+  </div>
+
+  <script>
+    let sentences = [];
+    let currentIndex = 0;
+    let mIndex=null;
+    let reading = false;
+    let readSpeed = 1;
+    let volume = 1;
+    let bookmarkedIndices = [];
+    let currentFileName = '';
+    let currentFileContent = '';
+    var synth = window.speechSynthesis;
+    
+    var voices = speechSynthesis.getVoices();
+   
+    const fileInput = document.getElementById('fileInput');
+    const startBtn = document.getElementById('startBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const bookmarkBtn = document.getElementById('bookmarkBtn');
+    const speedRange = document.getElementById('speedRange');
+    const volumeRange = document.getElementById('volumeRange');
+    const progressRange = document.getElementById('progressRange');
+    const progressLabel = document.getElementById('progressLabel');
+    const sentenceBox = document.getElementById('sentenceBox');
+    const bookmarkList = document.getElementById('bookmarkList');
+    const recentFiles = document.getElementById('recentFiles');
+    const recentFilesList = document.getElementById('recentFilesList');
+const installBtn = document.getElementById('installBtn');
+    const logEl = document.getElementById('log');
+    let deferredPrompt;
+
+    function log(message) {
+      logEl.textContent += `[${new Date().toLocaleTimeString()}] ${message}\n`;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      log('接收到 beforeinstallprompt 事件');
+    });
+
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          log(`用户选择结果：${choiceResult.outcome}`);
+          deferredPrompt = null;
+        }).catch((err) => {
+          log(`安装失败：${err.message}`);
+        });
+      } else {
+        log('未捕获到安装提示事件');
+      }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      log('当前运行在独立安装模式');
+    } else {
+      log('当前运行在浏览器模式');
+    }
+    // 文件历史记录管理
+    const MAX_RECENT_FILES = 5;
+    
+    // 获取最近文件列表
+    function getRecentFiles() {
+      const stored = localStorage.getItem('recentFiles');
+      return stored ? JSON.parse(stored) : [];
+    }
+    
+    // 保存最近文件列表
+    function saveRecentFiles(files) {
+      localStorage.setItem('recentFiles', JSON.stringify(files));
+    }
+    
+    // 添加文件到最近列表
+    function addToRecentFiles(fileName, content, position = 0) {
+      let recentFiles = getRecentFiles();
+      
+      // 移除已存在的同名文件
+      recentFiles = recentFiles.filter(file => file.name !== fileName);
+      
+      // 添加新文件到开头
+      recentFiles.unshift({
+        name: fileName,
+        content: content,
+        position: position,
+        timestamp: Date.now()
+      });
+      
+      // 限制最大数量
+      if (recentFiles.length > MAX_RECENT_FILES) {
+        recentFiles = recentFiles.slice(0, MAX_RECENT_FILES);
+      }
+      
+      saveRecentFiles(recentFiles);
+      renderRecentFiles();
+    }
+    
+    // 更新文件的朗读位置
+    function updateFilePosition(fileName, position) {
+      let recentFiles = getRecentFiles();
+      const fileIndex = recentFiles.findIndex(file => file.name === fileName);
+      
+      if (fileIndex !== -1) {
+        recentFiles[fileIndex].position = position;
+        recentFiles[fileIndex].timestamp = Date.now();
+        saveRecentFiles(recentFiles);
+      }
+    }
+    
+    // 从最近列表删除文件
+    function removeFromRecentFiles(fileName) {
+      let recentFiles = getRecentFiles();
+      recentFiles = recentFiles.filter(file => file.name !== fileName);
+      saveRecentFiles(recentFiles);
+      renderRecentFiles();
+    }
+    
+    // 渲染最近文件列表
+    function renderRecentFiles() {
+      const recentFiles = getRecentFiles();
+      
+      if (recentFiles.length === 0) {
+        document.getElementById('recentFiles').style.display = 'none';
+        return;
+      }
+      
+      document.getElementById('recentFiles').style.display = 'block';
+      recentFilesList.innerHTML = '';
+      
+      recentFiles.forEach(file => {
+        const fileItem = document.createElement('div');
+        fileItem.className = 'recent-file-item';
+        
+        const fileInfo = document.createElement('div');
+        fileInfo.className = 'file-info';
+        
+        const fileName = document.createElement('div');
+        fileName.className = 'file-name';
+        fileName.textContent = file.name;
+        
+        const filePosition = document.createElement('div');
+        filePosition.className = 'file-position';
+        filePosition.textContent = `上次朗读位置: 第 ${file.position} 句`;
+        
+        const fileDate = document.createElement('div');
+        fileDate.className = 'file-date';
+        fileDate.textContent = `最后打开: ${new Date(file.timestamp).toLocaleString()}`;
+        
+        fileInfo.appendChild(fileName);
+        fileInfo.appendChild(filePosition);
+        fileInfo.appendChild(fileDate);
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-file';
+        deleteBtn.textContent = '删除';
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation();
+          removeFromRecentFiles(file.name);
+        };
+        
+        fileItem.appendChild(fileInfo);
+        fileItem.appendChild(deleteBtn);
+        
+        // 点击文件项加载文件
+        fileItem.onclick = () => {
+          loadFileFromHistory(file);
+        };
+        
+        recentFilesList.appendChild(fileItem);
+      });
+    }
+    
+    // 从历史记录加载文件
+    function loadFileFromHistory(fileData) {
+      currentFileName = fileData.name;
+      currentFileContent = fileData.content;
+      sentences = fileData.content.split(/\r?\n/).filter(s => s.trim() !== '');
+      currentIndex = fileData.position;
+      progressRange.max = sentences.length - 1;
+      progressRange.value = currentIndex;
+      renderSentences();
+      highlightCurrent();
+      
+      // 清空文件输入框
+      fileInput.value = '';
+    }
+
+    speedRange.oninput = () => readSpeed = parseFloat(speedRange.value);
+    volumeRange.oninput = () => volume = parseFloat(volumeRange.value);
+
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        currentFileName = file.name;
+        currentFileContent = text;
+        sentences = text.split(/\r?\n/).filter(s => s.trim() !== '');
+        currentIndex = 0;
+        progressRange.max = sentences.length - 1;
+        progressRange.value = 0;
+        renderSentences();
+        
+        // 添加到最近文件列表
+        addToRecentFiles(file.name, text, 0);
+      };
+      reader.readAsText(file);
+    };
+
+    function renderSentences() {
+      sentenceBox.innerHTML = '';
+      sentences.forEach((sentence, i) => {
+        const div = document.createElement('div');
+        div.className = 'sentence';
+        div.textContent = sentence;
+        div.dataset.index = i;
+        sentenceBox.appendChild(div);
+      });
+    }
+
+    function highlightCurrent() {
+      document.querySelectorAll('.sentence').forEach((el, idx) => {
+        el.classList.toggle('highlight', idx === currentIndex);
+      });
+      progressLabel.textContent = `第 ${currentIndex} 句`;
+      progressRange.value = currentIndex;
+      const currentEl = document.querySelector(`.sentence[data-index="${currentIndex}"]`);
+      if (currentEl) {
+        currentEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
+      // 更新当前文件的朗读位置
+      if (currentFileName) {
+        updateFilePosition(currentFileName, currentIndex);
+      }
+    }
+
+    progressRange.oninput = () => {
+      currentIndex = parseInt(progressRange.value);
+      reading = true;
+      speechSynthesis.cancel();
+      readSentence();
+    };
+
+    startBtn.onclick = () => {
+      if (!sentences.length) return;
+      reading = true;
+      readSentence();
+    };
+
+    pauseBtn.onclick = () => {
+      reading = false;
+      speechSynthesis.cancel();
+    };
+
+    bookmarkBtn.onclick = () => {
+      if (!bookmarkedIndices.includes(currentIndex)) {
+        bookmarkedIndices.push(currentIndex);
+        const li = document.createElement('li');
+        li.textContent = `第 ${currentIndex} 句：${sentences[currentIndex]}`;
+        li.style.cursor = 'pointer';
+        li.onclick = () => {
+          currentIndex = parseInt(li.textContent.split('句')[0].replace('第', ''));
+          readSentence();
+        };
+        bookmarkList.appendChild(li);
+      }
+    };
+
+    function readSentence() {
+    	let tempIdx=currentIndex;
+    	if(mIndex) currentIndex=mIndex;
+      if (currentIndex >= sentences.length || !reading){mIndex=null; return;} 
+      
+      const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
+      currentIndex=tempIdx;
+      utterance.rate = readSpeed;
+      utterance.volume = volume;
+      /*utterance.onend = () => {
+        currentIndex++;
+        highlightCurrent();
+        if (reading && currentIndex < sentences.length) {
+          setTimeout(() => readSentence(), 400);
+        }
+      };*/
+      mIndex=null;
+      highlightCurrent();
+      //speechSynthesis.cancel();
+      //Put this on the play button
+    synth.resume();
+    synth.speak(utterance);
+      //speechSynthesis.speak(utterance);
+    }
+    document.addEventListener('keydown', function (event) {
+  if (!sentences.length) return;
+    
+  switch (event.key) {
+    case 'Enter': 
+      event.preventDefault(); // 如果你不希望触发默认行为（如提交表单）
+      
+      currentIndex = Math.min(sentences.length - 1, currentIndex + 2);
+      
+      break;
+  
+    case '1':
+      mIndex = Math.min(sentences.length - 1, currentIndex + 1);
+      break;
+    case '2':
+      mIndex = Math.max(0, currentIndex - 1);
+      break;
+    case '3':
+      mIndex = Math.max(0, currentIndex - 2);
+      break;
+    case '.':
+      currentIndex = Math.min(sentences.length - 1, currentIndex + 1);
+      break;
+    case '0':
+      event.preventDefault(); // 防止页面滚动
+      
+
+	  if (!speechSynthesis.speaking ) {
+		break;
+	    
+	    
+	  } else {
+		reading = false;
+	    synth.pause();
+	    return; // 特殊处理完就返回，不触发朗读逻辑
+	  }
+
+      
+    default:
+      return; // 非指定键不处理
+  }
+
+  reading = true;
+  speechSynthesis.cancel();
+  readSentence();
+});
+
+    // 页面初始化
+    window.addEventListener('load', () => {
+      // 渲染最近文件列表
+      renderRecentFiles();
+    });
+
+    // Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+
+  </script>
+</body>
+</html>
