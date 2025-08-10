@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <script>if ('serviceWorker' in navigator) {
+  <script>
+	  if ('serviceWorker' in navigator) {
       
-        navigator.serviceWorker.register('/read-tool/service-worker.js', {
-scope: '/read-tool/'
-}).then((registration) => {
+        navigator.serviceWorker.register('/read-tool/service-worker.js')
+			.then((registration) => {
             console.log('SW registered: ', registration);
           })
           .catch((registrationError) => {
