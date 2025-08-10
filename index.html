@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
+  <script>if ('serviceWorker' in navigator) {
+      
+        navigator.serviceWorker.register('/read-tool/service-worker.js', {
+scope: '/read-tool/'
+}).then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+    
+    }
+  </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>双语朗读器</title>
@@ -501,18 +514,7 @@ const installBtn = document.getElementById('installBtn');
     });
 
     // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/read-tool/service-worker.js', {
-scope: '/read-tool/'
-}).then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
-      });
-    }
+    
 
   </script>
 </body>
