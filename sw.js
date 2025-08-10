@@ -1,16 +1,18 @@
 const CACHE_NAME = 'bilingual-reader-v1';
+const BASE_PATH = '/read-tool';
+
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icons/icon-72x72.png',
-  '/icons/icon-96x96.png',
-  '/icons/icon-128x128.png',
-  '/icons/icon-144x144.png',
-  '/icons/icon-152x152.png',
-  '/icons/icon-192x192.png',
-  '/icons/icon-384x384.png',
-  '/icons/icon-512x512.png'
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/manifest.json`,
+  `${BASE_PATH}/icons/icon-72x72.png`,
+  `${BASE_PATH}/icons/icon-96x96.png`,
+  `${BASE_PATH}/icons/icon-128x128.png`,
+  `${BASE_PATH}/icons/icon-144x144.png`,
+  `${BASE_PATH}/icons/icon-152x152.png`,
+  `${BASE_PATH}/icons/icon-192x192.png`,
+  `${BASE_PATH}/icons/icon-384x384.png`,
+  `${BASE_PATH}/icons/icon-512x512.png`
 ];
 
 // Install event - cache resources
@@ -29,13 +31,11 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
         return fetch(event.request);
-      }
-    )
+      })
   );
 });
 
@@ -66,8 +66,8 @@ self.addEventListener('sync', (event) => {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : '双语朗读器有新消息',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: `${BASE_PATH}/icons/icon-192x192.png`,
+    badge: `${BASE_PATH}/icons/icon-72x72.png`,
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -85,7 +85,7 @@ self.addEventListener('notificationclick', (event) => {
   console.log('Notification click received.');
   event.notification.close();
   event.waitUntil(
-    clients.openWindow('/')
+    clients.openWindow(`${BASE_PATH}/`)
   );
 });
-
+  
