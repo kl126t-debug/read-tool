@@ -4,7 +4,7 @@
   <script>
 	  if ('serviceWorker' in navigator) {
       
-        navigator.serviceWorker.register('/read-tool/sw.js')
+        navigator.serviceWorker.register('/read-tool/sw.js',{scope:'/read-tool/'})
 			.then((registration) => {
             console.log('SW registered: ', registration);
           })
