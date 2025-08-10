@@ -16,9 +16,10 @@
   <link rel="manifest" href="manifest.json">
   
   <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/read-tool/icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/read-tool/icons/icon-512x512.png">
+  <link rel="apple-touch-icon" href="/read-tool/icons/icon-192x192.png">
+
   <style>
     body {
       font-family: sans-serif;
@@ -502,8 +503,9 @@ const installBtn = document.getElementById('installBtn');
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then((registration) => {
+        navigator.serviceWorker.register('/read-tool/service-worker.js', {
+scope: '/read-tool/'
+}).then((registration) => {
             console.log('SW registered: ', registration);
           })
           .catch((registrationError) => {
