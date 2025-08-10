@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.kl126t_debug.twa",
+        "sha256_cert_fingerprints": ["6F:E6:3C:6D:3E:9A:A5:47:BB:FA:6F:26:05:54:0A:0E:B6:3C:73:98:48:EC:94:F7:19:F9:08:30:58:06:34:8A"]
+      }
+    }]
