@@ -128,10 +128,7 @@
   </style>
 </head>
 <body>
-	  <h2>PWA 安装日志控制台</h2>
-  <button id="installBtn">安装应用</button>
-  <pre id="log" style="background: #f0f0f0; padding: 1em; white-space: pre-wrap;"></pre>
-
+	  
   <h2>📖 朗读器</h2>
   <input type="file" id="fileInput" accept=".txt"><br>
   
@@ -192,39 +189,7 @@
     const bookmarkList = document.getElementById('bookmarkList');
     const recentFiles = document.getElementById('recentFiles');
     const recentFilesList = document.getElementById('recentFilesList');
-const installBtn = document.getElementById('installBtn');
-    const logEl = document.getElementById('log');
-    let deferredPrompt;
 
-    function log(message) {
-      logEl.textContent += `[${new Date().toLocaleTimeString()}] ${message}\n`;
-    }
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      log('接收到 beforeinstallprompt 事件');
-    });
-
-    installBtn.addEventListener('click', () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          log(`用户选择结果：${choiceResult.outcome}`);
-          deferredPrompt = null;
-        }).catch((err) => {
-          log(`安装失败：${err.message}`);
-        });
-      } else {
-        log('未捕获到安装提示事件');
-      }
-    });
-
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      log('当前运行在独立安装模式');
-    } else {
-      log('当前运行在浏览器模式');
-    }
     // 文件历史记录管理
     const MAX_RECENT_FILES = 5;
     
@@ -488,6 +453,7 @@ const installBtn = document.getElementById('installBtn');
       
 
 	  if (!speechSynthesis.speaking ) {
+		synth.synth.resume(); 
 		break;
 	    
 	    
