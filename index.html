@@ -194,7 +194,9 @@
 
     // 文件历史记录管理
     const MAX_RECENT_FILES = 5;
-    
+    let isProcessing = false; // 标志位，用于防止重复处理
+    let lastKeyTime = 0; // 上一次按键的时间
+    const debounceDelay = 200; // 防抖延迟时间（毫秒）
     // 获取最近文件列表
     function getRecentFiles() {
       const stored = localStorage.getItem('recentFiles');
@@ -428,6 +430,14 @@
       //speechSynthesis.speak(utterance);
     }
     document.addEventListener('keydown', function (event) {
+		const currentTime = Date.now();
+  
+  // 检查是否在防抖时间内
+  if (currentTime - lastKeyTime < debounceDelay) {
+    return;
+  }
+  
+  lastKeyTime = currentTime;
   if (!sentences.length) return;
     
   switch (event.key) {
