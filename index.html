@@ -1,64 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <script>
-	  if ('serviceWorker' in navigator) {
-      
-        navigator.serviceWorker.register('/read-tool/sw.js',{scope:'/read-tool/'})
-			.then((registration) => {
-            console.log('SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
-          });
-    
-    }
-  </script>
-	  <script>
-  let startX, startY;
-
-window.addEventListener('pointerdown', e => {
-  startX = e.clientX;
-  startY = e.clientY;
-});
-
-window.addEventListener('pointerup', e => {
-  const target = e.target.closest('.sentence');
-  if (!target) return;
-
-  setTimeout(() => {
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
-    const text = sel.toString().trim();
-    if (!text) return;
-
-    /* 关键：立即阻止浏览器弹菜单 */
-    sel.removeAllRanges();   // 清掉选区，系统菜单就不会出现
-    //location.href = 'gdlookup://localhost/?word=' + encodeURIComponent(text);
-  }, 0);   // 不用等 200 ms，清掉选区后立刻跳转
-	location.href = 'goldendict://' + encodeURIComponent(text);
-  }, 0);   // 不用等 200 ms，清掉选区后立刻跳转
-});
-
-/* 保险：阻止 contextmenu（长按菜单） */
-window.addEventListener('contextmenu', e => {
-  if (e.target.closest('.sentence')) e.preventDefault();
-});
-
-</script>
-
-<style>
-/* 1. 让 .sentence 可以选，其余区域不能选 */
-body *:not(.sentence) {
-  -webkit-user-select: none;
-  user-select: none;
-}
-.sentence {
-  -webkit-user-select: text;
-  user-select: text;
-}
-
-</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>双语朗读器</title>
@@ -74,14 +16,11 @@ body *:not(.sentence) {
   <link rel="manifest" href="manifest.json">
   
   <!-- Icons -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/read-tool/icons/icon-192x192.png">
-  <link rel="icon" type="image/png" sizes="512x512" href="/read-tool/icons/icon-512x512.png">
-  <link rel="apple-touch-icon" href="/read-tool/icons/icon-192x192.png">
-
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <style>
-	  
     body {
-		
       font-family: sans-serif;
       padding: 1em;
       display: flex;
@@ -173,9 +112,54 @@ body *:not(.sentence) {
       width: 90vw;
     }
   </style>
+  <script>
+  
+    document.addEventListener('selectionchange', () => {
+      const selectedText = window.getSelection().toString().trim();
+     const link = document.getElementById('lookupLink');
+
+ if (selectedText) {
+        const intentUrl = `intent://word=${encodeURIComponent(selectedText)}#Intent;scheme=goldendict;end`;
+        link.href = intentUrl;
+        link.textContent = `查词：${selectedText}`;
+        link.style.display = 'inline';
+      } else {
+        link.style.display = 'none';
+      }
+    });
+/* 保险：阻止 contextmenu（长按菜单） */
+window.addEventListener('contextmenu', e => {
+  if (e.target.closest('.sentence')) e.preventDefault();
+});
+
+
+</script>
+
+<style>
+	#lookupLink {
+      display: none;
+      font-size: 18px;
+      color: blue;
+      margin-top: 10px;
+    }
+/* 1. 让 .sentence 可以选，其余区域不能选 */
+body *:not(.sentence) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sentence {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+</style>
+
 </head>
 <body>
-	  
+	  <h2>PWA 安装日志控制台</h2>
+  <button id="installBtn">安装应用</button>
+  <pre id="log" style="background: #f0f0f0; padding: 1em; white-space: pre-wrap;"></pre>
+
   <h2>📖 朗读器</h2>
   <input type="file" id="fileInput" accept=".txt"><br>
   
@@ -202,7 +186,7 @@ body *:not(.sentence) {
     <input type="range" id="progressRange" min="0" value="0" step="1">
     <span id="progressLabel">第 0 句</span>
   </div>
-
+    <a id="lookupLink" target="_blank">查词</a>
   <div id="sentenceBox"></div>
 
   <div id="bookmarks">
@@ -220,10 +204,7 @@ body *:not(.sentence) {
     let bookmarkedIndices = [];
     let currentFileName = '';
     let currentFileContent = '';
-    var synth = window.speechSynthesis;
-    
-    var voices = speechSynthesis.getVoices();
-   
+
     const fileInput = document.getElementById('fileInput');
     const startBtn = document.getElementById('startBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -236,12 +217,42 @@ body *:not(.sentence) {
     const bookmarkList = document.getElementById('bookmarkList');
     const recentFiles = document.getElementById('recentFiles');
     const recentFilesList = document.getElementById('recentFilesList');
+const installBtn = document.getElementById('installBtn');
+    const logEl = document.getElementById('log');
+    let deferredPrompt;
 
+    function log(message) {
+      logEl.textContent += `[${new Date().toLocaleTimeString()}] ${message}\n`;
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      log('接收到 beforeinstallprompt 事件');
+    });
+
+    installBtn.addEventListener('click', () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          log(`用户选择结果：${choiceResult.outcome}`);
+          deferredPrompt = null;
+        }).catch((err) => {
+          log(`安装失败：${err.message}`);
+        });
+      } else {
+        log('未捕获到安装提示事件');
+      }
+    });
+
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      log('当前运行在独立安装模式');
+    } else {
+      log('当前运行在浏览器模式');
+    }
     // 文件历史记录管理
     const MAX_RECENT_FILES = 5;
-    let isProcessing = false; // 标志位，用于防止重复处理
-    let lastKeyTime = 0; // 上一次按键的时间
-    const debounceDelay = 200; // 防抖延迟时间（毫秒）
+    
     // 获取最近文件列表
     function getRecentFiles() {
       const stored = localStorage.getItem('recentFiles');
@@ -451,12 +462,9 @@ body *:not(.sentence) {
     };
 
     function readSentence() {
-    	let tempIdx=currentIndex;
     	if(mIndex) currentIndex=mIndex;
       if (currentIndex >= sentences.length || !reading){mIndex=null; return;} 
-      
       const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
-      currentIndex=tempIdx;
       utterance.rate = readSpeed;
       utterance.volume = volume;
       /*utterance.onend = () => {
@@ -468,21 +476,10 @@ body *:not(.sentence) {
       };*/
       mIndex=null;
       highlightCurrent();
-      //speechSynthesis.cancel();
-      //Put this on the play button
-    synth.resume();
-    synth.speak(utterance);
-      //speechSynthesis.speak(utterance);
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
     }
     document.addEventListener('keydown', function (event) {
-		const currentTime = Date.now();
-  
-  // 检查是否在防抖时间内
-  if (currentTime - lastKeyTime < debounceDelay) {
-    return;
-  }
-  
-  lastKeyTime = currentTime;
   if (!sentences.length) return;
     
   switch (event.key) {
@@ -502,25 +499,18 @@ body *:not(.sentence) {
     case '3':
       mIndex = Math.max(0, currentIndex - 2);
       break;
-    case '.':
+    case '7':
       currentIndex = Math.min(sentences.length - 1, currentIndex + 1);
       break;
     case '0':
       event.preventDefault(); // 防止页面滚动
-      
-
-	  if (!speechSynthesis.speaking ) {
-		synth.resume(); 
-		break;
-	    
-	    
-	  } else {
-		reading = false;
-	    synth.pause();
-	    return; // 特殊处理完就返回，不触发朗读逻辑
-	  }
-
-      
+      reading = !reading;
+      if (reading) {
+        speechSynthesis.resume();
+      } else {
+        speechSynthesis.pause();
+      }
+      return; // 特殊处理完就返回，不触发朗读逻辑
     default:
       return; // 非指定键不处理
   }
@@ -537,7 +527,17 @@ body *:not(.sentence) {
     });
 
     // Service Worker Registration
-    
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
 
   </script>
 </body>
