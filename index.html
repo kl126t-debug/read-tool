@@ -34,7 +34,9 @@ window.addEventListener('pointerup', e => {
 
     /* 关键：立即阻止浏览器弹菜单 */
     sel.removeAllRanges();   // 清掉选区，系统菜单就不会出现
-    location.href = 'gdlookup://localhost/?word=' + encodeURIComponent(text);
+    //location.href = 'gdlookup://localhost/?word=' + encodeURIComponent(text);
+  }, 0);   // 不用等 200 ms，清掉选区后立刻跳转
+	location.href = 'goldendict://' + encodeURIComponent(text);
   }, 0);   // 不用等 200 ms，清掉选区后立刻跳转
 });
 
