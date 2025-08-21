@@ -14,6 +14,49 @@
     
     }
   </script>
+	  <script>
+  let startX, startY;
+
+window.addEventListener('pointerdown', e => {
+  startX = e.clientX;
+  startY = e.clientY;
+});
+
+window.addEventListener('pointerup', e => {
+  const target = e.target.closest('.sentence');
+  if (!target) return;
+
+  setTimeout(() => {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const text = sel.toString().trim();
+    if (!text) return;
+
+    /* 关键：立即阻止浏览器弹菜单 */
+    sel.removeAllRanges();   // 清掉选区，系统菜单就不会出现
+    location.href = 'gdlookup://localhost/?word=' + encodeURIComponent(text);
+  }, 0);   // 不用等 200 ms，清掉选区后立刻跳转
+});
+
+/* 保险：阻止 contextmenu（长按菜单） */
+window.addEventListener('contextmenu', e => {
+  if (e.target.closest('.sentence')) e.preventDefault();
+});
+
+</script>
+
+<style>
+/* 1. 让 .sentence 可以选，其余区域不能选 */
+body *:not(.sentence) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.sentence {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+</style>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>双语朗读器</title>
