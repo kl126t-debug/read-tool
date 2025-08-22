@@ -160,6 +160,9 @@
     let bookmarkedIndices = [];
     let currentFileName = '';
     let currentFileContent = '';
+	  let lastKeyTime = 0; // 上一次按键的时间
+const debounceDelay = 200; // 防抖延迟时间（毫秒）
+
     var synth = window.speechSynthesis;
     
     var voices = speechSynthesis.getVoices();
@@ -414,7 +417,17 @@
     synth.speak(utterance);
       //speechSynthesis.speak(utterance);
     }
-    document.addEventListener('keydown', function (event) {
+    
+		
+document.addEventListener('keydown', function (event) {
+  const currentTime = Date.now();
+  
+  // 检查是否在防抖时间内
+  if (currentTime - lastKeyTime < debounceDelay) {
+    return;
+  }
+  
+  lastKeyTime = currentTime;
   if (!sentences.length) return;
     
   switch (event.key) {
