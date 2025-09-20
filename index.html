@@ -523,7 +523,7 @@ function extractHitWordGroups(words) {
   const words = result.result.details;
   const matchlist=extractHitWordGroups(words);
   let mpiece='';
-  if (matchlist.length)===1){
+  if (matchlist.length===1){
   	mpiece=matchlist[0].join(" ");
   }
   let summary = `✅ 测评完成：
@@ -654,7 +654,7 @@ document.addEventListener('keydown',  (e)=> {
     window.addEventListener('load', () => {
       // 检查浏览器是否支持 Service Worker
 	    if ('serviceWorker' in navigator) {
-	      navigator.serviceWorker.register('/sw.js')
+	      navigator.serviceWorker.register('sw.js')
 	      .then(registration => {
 	        console.log('Service Worker 注册成功:', registration);
 	      })
