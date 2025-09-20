@@ -486,7 +486,7 @@ function extractHitWordGroups(words) {
   // Step 1: 找出命中的词及其索引
   const hits = words
     .map((word, index) => {
-      const isHit = word.score > 0 || (word.rec && word.rec.trim() !== "");
+      const isHit = word.score > 0 || (word.rec && word.rec.trim() !== "#");
       return isHit ? { index, text: word.lab } : null;
     })
     .filter(Boolean);
@@ -543,9 +543,7 @@ ${mpiece}
       <tbody>
   `;
 words.forEach((word, index) => {
-    const phoneDetails = word.phones?.map(phone => {
-      return `${phone.phone}(${phone.score}, ${phone.dp_message})`;
-    }).join(", ") || "—";
+    
 
     tableHTML += `
       <tr>
