@@ -523,7 +523,7 @@ function extractHitWordGroups(words) {
   const words = result.result.details;
   const matchlist=extractHitWordGroups(words);
   let mpiece='';
-  if (len(matchlist)==1){
+  if (matchlist.length)===1){
   	mpiece=matchlist[0].join(" ");
   }
   let summary = `✅ 测评完成：
