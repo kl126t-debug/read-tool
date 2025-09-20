@@ -480,6 +480,38 @@ function initRecorder() {
            }
       }
     
+function extractHitWordGroups(words) {
+  if (!Array.isArray(words)) return [];
+
+  // Step 1: 找出命中的词及其索引
+  const hits = words
+    .map((word, index) => {
+      const isHit = word.score > 0 || (word.rec && word.rec.trim() !== "");
+      return isHit ? { index, text: word.lab } : null;
+    })
+    .filter(Boolean);
+
+  if (hits.length === 0) return [];
+
+  // Step 2: 按索引分组连续的命中词
+  const groups = [];
+  let currentGroup = [hits[0]];
+
+  for (let i = 1; i < hits.length; i++) {
+    const prev = hits[i - 1];
+    const curr = hits[i];
+    if (curr.index === prev.index + 1) {
+      currentGroup.push(curr);
+    } else {
+      groups.push(currentGroup);
+      currentGroup = [curr];
+    }
+  }
+  groups.push(currentGroup); // 加入最后一组
+
+  // Step 3: 输出每组命中词文本列表
+  return groups.map(group => group.map(item => item.text));
+}
 
     // 格式化测评结果
     function formatResult(result) {
@@ -489,12 +521,14 @@ function initRecorder() {
 
   const { overall, fluency, integrity, accuracy } = result.result;
   const words = result.result.details;
-
+  const matchlist=extractHitWordGroups(words);
+  let mpiece='';
+  if (len(matchlist)==1){
+  	mpiece=matchlist[0].join(" ");
+  }
   let summary = `✅ 测评完成：
-总分：${overall}
-流利度：${fluency}
-完整度：${integrity}
-准确度：${accuracy}`;
+$(mpiece)
+`;
 
   let tableHTML = `
     <table border="1" cellpadding="6" style="margin-top:10px; border-collapse: collapse; width:100%;">
@@ -561,8 +595,8 @@ words.forEach((word, index) => {
         	isLongPress = false;
         	stopRbtn();
         }
-       } 
-      
+       
+      }
     });    
 		
 document.addEventListener('keydown',  (e)=> {
