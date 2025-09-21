@@ -19,7 +19,7 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-  <script src="https://sdk.cloud.chivox.com/chivoxsdk-js/v6.0/chivox.min.js"></script>
+  <script src="https://sdk.cloud.chivox.com/chivoxsdk-js/v6.1/chivox.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -165,10 +165,10 @@
 	  let recorder = null;
     let isRecording = false;
 
-const debounceDelay = 350;
+const debounceDelay = 100;
     let lastKeyTime = 0;
 
-    const longPressThreshold = 500;
+    const longPressThreshold = 300;
     let keyDownTime = 0;
     let longPressTimer = null;
     let isLongPress = false;
@@ -576,8 +576,8 @@ words.forEach((word, index) => {
         const pressDuration = now - keyDownTime;
         
 
-        clearTimeout(longPressTimer);
-        
+        if(longPressTimer) clearTimeout(longPressTimer);
+        longPressTimer=null;
 
         if (!isLongPress && pressDuration < longPressThreshold) {
           if (!speechSynthesis.speaking ) {
@@ -627,14 +627,15 @@ document.addEventListener('keydown',  (e)=> {
     case '0':
       e.preventDefault(); // 防止页面滚动
       keyDownTime = now;
-      longPressTimer = setTimeout(() => {
-        	if(isLongPress ===false){
-              isLongPress = true;
-        	  startRbtn(); //开始录音
-            }
-          
-        }, longPressThreshold);
-      
+      if(isLongPress ===false && longPressTimer===null){
+	      longPressTimer = setTimeout(() => {
+	        	
+	              isLongPress = true;
+	        	  startRbtn(); //开始录音
+	            
+	          
+	        }, longPressThreshold);
+      }
 
 	  return;
 
