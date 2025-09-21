@@ -157,7 +157,7 @@
     let sentences = [];
     let currentIndex = 0;
     let mIndex=null;
-    let reading = false;
+   // let reading = false;
     let readSpeed = 1;
     let volume = 1;
     let bookmarkedIndices = [];
@@ -387,7 +387,7 @@ function initRecorder() {
 
     progressRange.oninput = () => {
       currentIndex = parseInt(progressRange.value);
-      reading = true;
+      //reading = true;
       speechSynthesis.cancel();
       readSentence();
     };
@@ -411,7 +411,7 @@ function initRecorder() {
     function readSentence() {
     	let tempIdx=currentIndex;
     	if(mIndex) currentIndex=mIndex;
-      if (currentIndex >= sentences.length || !reading){mIndex=null; return;} 
+      if (currentIndex >= sentences.length || !speechSynthesis.speaking){mIndex=null; return;} 
       
       const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
       currentIndex=tempIdx;
@@ -781,12 +781,12 @@ words.forEach((word, index) => {
 
         if (!isLongPress && pressDuration < longPressThreshold) {
           if (!speechSynthesis.speaking ) {
-			reading = true;
+			//reading = true;
 			  speechSynthesis.cancel();
 			  mIndex=null;
 			  readSentence();
 		   } else {
-			reading = false;
+		//	reading = false;
 		    synth.pause();
 		    return; // 特殊处理完就返回，不触发朗读逻辑
 		   }
@@ -846,7 +846,7 @@ document.addEventListener('keydown',  (e)=> {
       return; // 非指定键不处理
   }
 
-  reading = true;
+//  reading = true;
   speechSynthesis.cancel();
   readSentence();
 });
