@@ -530,14 +530,13 @@ function extractHitWordGroups(words) {
   const queryText=`${mpiece} 在这句话中是什么意思：${thisSentence}`;
   let reply;
   client.sendMessage(queryText).then(result=>{
-  	 reply=result;
+  	 
+  document.getElementById("result").textContent = result;
   	}
 );
   
 
-  let summary = `✅ 测评完成：
-${reply}
-`;
+  
 
   let tableHTML = `
     <table border="1" cellpadding="6" style="margin-top:10px; border-collapse: collapse; width:100%;">
@@ -567,7 +566,7 @@ words.forEach((word, index) => {
 
   tableHTML += `</tbody></table>`;
 
-  document.getElementById("result").textContent = summary;
+  
   document.getElementById("wordTableContainer").innerHTML = tableHTML;
 
   return summary;
