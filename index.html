@@ -165,7 +165,7 @@
     let currentFileContent = '';
 	  let recorder = null;
     let isRecording = false;
-let thisSentence="";
+let thisSentence=null;
 const debounceDelay = 100;
     let lastKeyTime = 0;
  let client =null;
@@ -434,7 +434,8 @@ function initRecorder() {
     }
 
       function startRbtn(){
-      	 thisSentence = sentences[Math.max(0, currentIndex - 1)];
+      	if(mIndex)
+      	 thisSentence = sentences[mIndex];
 
       if (!thisSentence) {
         
@@ -527,6 +528,7 @@ function extractHitWordGroups(words) {
   if (matchlist.length===1){
   	mpiece=matchlist[0].join(" ");
   }
+  if(mpiece && thisSentence){
   const queryText=`在这句话里的${mpiece}是什么意思，${thisSentence}`;
   
   client.sendMessage(queryText).then(result=>{
@@ -537,6 +539,8 @@ function extractHitWordGroups(words) {
       synth.speak(utterance);	 
       document.getElementById("result").textContent = result;
   	}
+  thisSentence=null;
+  }
 );
   
 
