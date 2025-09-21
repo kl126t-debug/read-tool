@@ -411,7 +411,7 @@ function initRecorder() {
     function readSentence() {
     	let tempIdx=currentIndex;
     	if(mIndex) currentIndex=mIndex;
-      if (currentIndex >= sentences.length){mIndex=null; return;} 
+      if (currentIndex >= sentences.length ){mIndex=null; return;} 
       
       const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
       currentIndex=tempIdx;
@@ -529,7 +529,7 @@ function extractHitWordGroups(words) {
   	mpiece=matchlist[0].join(" ");
   }
   if(mpiece && thisSentence){
-  const queryText=`简要说明句子中${mpiece}意思和用法，${thisSentence}`;
+  const queryText=`简要讲解句子中${mpiece}的用法，${thisSentence}`;
   thisSentence=null;
   client.sendMessage(queryText).then(result=>{
       const utterance = new SpeechSynthesisUtterance(result);
@@ -581,7 +581,7 @@ words.forEach((word, index) => {
 }     
 
  class XiaobaiChatClient {
-  constructor(apiKey, botId = 200006, modelId = "xiaobaiOSS") {
+  constructor(apiKey, botId = 200006, modelId = "deepseekV3_1") {
     this.apiKey = apiKey;
     this.botId = botId;
     this.modelId = modelId;
