@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>双语朗读器</title>
+  <title>热啊的</title>
   
   <!-- PWA Meta Tags -->
-  <meta name="description" content="一个功能强大的双语朗读器PWA应用">
+  <meta name="description" content="一个功能强大">
   <meta name="theme-color" content="#2196F3">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="双语朗读器">
+  <meta name="apple-mobile-web-app-title" content="双yldq">
   
   <!-- Manifest -->
   <link rel="manifest" href="manifest.json">
@@ -20,6 +20,7 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
   <script src="https://sdk.cloud.chivox.com/chivoxsdk-js/v6.1/chivox.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -164,10 +165,10 @@
     let currentFileContent = '';
 	  let recorder = null;
     let isRecording = false;
-
+const thisSentence="";
 const debounceDelay = 100;
     let lastKeyTime = 0;
-
+ const client =null;
     const longPressThreshold = 300;
     let keyDownTime = 0;
     let longPressTimer = null;
@@ -433,7 +434,7 @@ function initRecorder() {
     }
 
       function startRbtn(){
-      	const thisSentence = sentences[Math.max(0, currentIndex - 1)];
+      	 thisSentence = sentences[Math.max(0, currentIndex - 1)];
 
       if (!thisSentence) {
         
@@ -526,8 +527,15 @@ function extractHitWordGroups(words) {
   if (matchlist.length===1){
   	mpiece=matchlist[0].join(" ");
   }
+  const queryText=`${mpiece} 在这句话中是什么意思：${thisSentence}`;
+  client.sendMessage(queryText).then(result=>{
+  	const reply=result;
+  	}
+);
+  
+
   let summary = `✅ 测评完成：
-${mpiece}
+${reply}
 `;
 
   let tableHTML = `
@@ -564,7 +572,191 @@ words.forEach((word, index) => {
   return summary;
 }     
 
-       
+ class XiaobaiChatClient {
+  constructor(apiKey, botId = 200006, modelId = "xiaobaiOSS") {
+    this.apiKey = apiKey;
+    this.botId = botId;
+    this.modelId = modelId;
+    this.deviceId = `${crypto.randomUUID().replace(/-/g, "")}_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+    this.token = "";
+    this.userId = "";
+    this.conversationId = "";
+  }
+
+  async generateSignature(payloadStr) {
+    const mistiming = Number(localStorage.getItem("mistiming")) || 0;
+    const xDate = new Date(Date.now() + mistiming).toUTCString();
+    const digestBuffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payloadStr));
+    const digestBase64 = btoa(String.fromCharCode(...new Uint8Array(digestBuffer)));
+    const digestHeader = `SHA-256=${digestBase64}`;
+    const stringToSign = `x-date: ${xDate}\ndigest: ${digestHeader}`;
+    const keyBuffer = new TextEncoder().encode(this.apiKey);
+    const cryptoKey = await crypto.subtle.importKey("raw", keyBuffer, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
+    const signatureBuffer = await crypto.subtle.sign("HMAC", cryptoKey, new TextEncoder().encode(stringToSign));
+    const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBuffer)));
+    const authorizationHeader = `hmac username="web.1.0.beta", algorithm="hmac-sha1", headers="x-date digest", signature="${signatureBase64}"`;
+
+    return { xDate, digestHeader, authorizationHeader };
+  }
+
+  async init() {
+    const payload = {
+      deviceId: this.deviceId,
+      device: "Edge",
+      client: "tourist",
+      phone: this.deviceId,
+      code: this.deviceId,
+      extraInfo: { url: "https://www.wenxiaobai.com/" }
+    };
+    const payloadStr = JSON.stringify(payload);
+    const { xDate, digestHeader, authorizationHeader } = await this.generateSignature(payloadStr);
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": authorizationHeader,
+      "Digest": digestHeader,
+      "x-date": xDate,
+      "X-Yuanshi-AppName": "wenxiaobai",
+      "X-Yuanshi-DeviceId": this.deviceId,
+      "X-Yuanshi-Platform": "web"
+    };
+
+    const res = await fetch("https://api-bj.wenxiaobai.com/api/v1.0/user/sessions", {
+      method: "POST",
+      headers,
+      body: payloadStr
+    });
+    const data = await res.json();
+    this.token = data?.data?.token || "";
+    this.userId = data?.data?.user?.id || "";
+
+    await this.createConversation();
+  }
+
+  async createConversation() {
+    const url = `https://api-bj.wenxiaobai.com/api/v1.0/core/conversations/users/${this.userId}/bots/${this.botId}/conversation`;
+    const payloadStr = JSON.stringify({ visitorId: this.deviceId });
+    const { xDate, digestHeader, authorizationHeader } = await this.generateSignature(payloadStr);
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": authorizationHeader,
+      "Digest": digestHeader,
+      "x-date": xDate,
+      "X-Yuanshi-Authorization": `Bearer ${this.token}`,
+      "X-Yuanshi-AppName": "wenxiaobai",
+      "X-Yuanshi-DeviceId": this.deviceId,
+      "X-Yuanshi-Platform": "web"
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: payloadStr
+    });
+    const data = await res.json();
+    this.conversationId = data?.data || "";
+  }
+
+  async sendMessage(query) {
+    const body = {
+      userId: this.userId,
+      botAlias: "custom",
+      query,
+      isRetry: false,
+      breakingStrategy: 0,
+      isNewConversation: true,
+      isAnonymousChat: false,
+      mediaInfos: [],
+      turnIndex: 0,
+      rewriteQuery: "",
+      conversationId: this.conversationId,
+      attachmentInfo: { url: { infoList: [] } },
+      inputWay: "proactive",
+      agentId: this.botId,
+      modelId: this.modelId,
+      aiAbility: { id: "" },
+      abilities: [],
+      pureQuery: "",
+      isPublic: 0
+    };
+    const payloadStr = JSON.stringify(body);
+    const { xDate, digestHeader, authorizationHeader } = await this.generateSignature(payloadStr);
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Accept": "text/event-stream, application/json, text/event-stream",
+      "Authorization": authorizationHeader,
+      "Digest": digestHeader,
+      "x-date": xDate,
+      "X-Yuanshi-AppName": "wenxiaobai",
+      "X-Yuanshi-Authorization": `Bearer ${this.token}`,
+      "X-Yuanshi-DeviceId": this.deviceId,
+      "X-Yuanshi-Platform": "web"
+    };
+
+    const res = await fetch("https://api-bj.wenxiaobai.com/api/v1.0/core/conversation/chat/v3", {
+      method: "POST",
+      headers,
+      body: payloadStr
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let finalText = "";
+    let isThinking = false;
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split("\n").map(line => line.trim()).filter(Boolean);
+      for (const line of lines) {
+        const content = this.extractContent(line);
+        if (content) {
+          if (content.startsWith("```ys_think")) {
+            isThinking = true;
+          } else if (content.includes("\n<end>已深度思考")) {
+            isThinking = false;
+          } else if (!isThinking) {
+            finalText += content;
+          }
+        }
+      }
+    }
+
+    return this.md2tts(finalText);
+  }
+
+  extractContent(line) {
+    const raw = line.startsWith("data:") ? line.slice(5).trim() : line.trim();
+    try {
+      const json = JSON.parse(raw);
+      return json?.content || null;
+    } catch {
+      const match = raw.match(/"content"\s*:\s*"([^"]*)/);
+      return match ? match[1] : null;
+    }
+  }
+
+  md2tts(md) {
+    const html = marked.parse(md);
+    const div = document.createElement("div");
+    div.innerHTML = html;
+    div.querySelectorAll("script,style,noscript,svg,canvas").forEach(n => n.remove());
+    div.querySelectorAll("pre,code").forEach(n => n.innerText = n.innerText.replace(/\n+/g, " "));
+    div.querySelectorAll("table").forEach(table => {
+      const lines = Array.from(table.rows).map(row =>
+        Array.from(row.cells).map(cell => cell.innerText.trim()).join("，")
+      );
+      table.replaceWith(lines.join("；"));
+    });
+    div.querySelectorAll("img").forEach(img => img.replaceWith(img.alt ? `[${img.alt}]` : ""));
+    div.querySelectorAll("a").forEach(a => a.replaceWith(a.innerText));
+    return div.innerText.replace(/\s+/g, " ").replace(/([。！？；，\.])\s*([。！？；，\.])/g, "$1").trim();
+  }
+}
+      
 
         
       
@@ -667,6 +859,15 @@ document.addEventListener('keydown',  (e)=> {
 	      renderRecentFiles();
 	      // 页面加载时初始化 SDK
 	     initRecorder();
+	
+		 client = new XiaobaiChatClient("TkoWuEN8cpDJubb7Zfwxln16NQDZIc8z");
+		
+		 client
+              .init()
+               .then(()=>console.log("xb初始化完成"))
+               .catch(e=>console.log ("xb初始化失败：",e));
+
+
     });
 
     
