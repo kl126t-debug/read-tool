@@ -411,7 +411,7 @@ function initRecorder() {
     function readSentence() {
     	let tempIdx=currentIndex;
     	if(mIndex) currentIndex=mIndex;
-      if (currentIndex >= sentences.length || !speechSynthesis.speaking){mIndex=null; return;} 
+      if (currentIndex >= sentences.length){mIndex=null; return;} 
       
       const utterance = new SpeechSynthesisUtterance(sentences[currentIndex]);
       currentIndex=tempIdx;
