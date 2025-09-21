@@ -460,7 +460,7 @@ function initRecorder() {
         duration: 10000, // 最大录音时长（毫秒）
         onScore: result => {
          // console.log("✅ 测评原始 JSON：", result);
-          resultDiv.textContent = formatResult(result);
+         formatResult(result);
         },
         onScoreError: err => {
           console.error("❌ 测评失败", err);
@@ -527,11 +527,15 @@ function extractHitWordGroups(words) {
   if (matchlist.length===1){
   	mpiece=matchlist[0].join(" ");
   }
-  const queryText=`${mpiece} 在这句话中是什么意思：${thisSentence}`;
-  let reply;
+  const queryText=`在这句话里的${mpiece}是什么意思，${thisSentence}`;
+  
   client.sendMessage(queryText).then(result=>{
-  	 
-  document.getElementById("result").textContent = result;
+      const utterance = new SpeechSynthesisUtterance(result);
+      
+      utterance.rate = readSpeed;
+      utterance.volume = volume;
+      synth.speak(utterance);	 
+      document.getElementById("result").textContent = result;
   	}
 );
   
@@ -569,7 +573,7 @@ words.forEach((word, index) => {
   
   document.getElementById("wordTableContainer").innerHTML = tableHTML;
 
-  return summary;
+  
 }     
 
  class XiaobaiChatClient {
