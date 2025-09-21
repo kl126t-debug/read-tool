@@ -714,7 +714,7 @@ words.forEach((word, index) => {
       const lines = chunk.split("\n").map(line => line.trim()).filter(Boolean);
       for (const line of lines) {
         const content = this.extractContent(line);
-        if (content) {
+        if (content && typeof content === 'string') {
           if (content.startsWith("```ys_think")) {
             isThinking = true;
           } else if (content.includes("\n<end>已深度思考")) {
