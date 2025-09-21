@@ -530,7 +530,7 @@ function extractHitWordGroups(words) {
   }
   if(mpiece && thisSentence){
   const queryText=`简要说明句子中${mpiece}意思和用法，${thisSentence}`;
-  
+  thisSentence=null;
   client.sendMessage(queryText).then(result=>{
       const utterance = new SpeechSynthesisUtterance(result);
       
@@ -538,10 +538,10 @@ function extractHitWordGroups(words) {
       utterance.volume = volume;
       synth.speak(utterance);	 
       document.getElementById("result").textContent = result;
-  	}
-  thisSentence=null;
+  	});
+  
   }
-);
+
   
 
   
