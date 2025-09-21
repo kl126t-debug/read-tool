@@ -783,6 +783,7 @@ words.forEach((word, index) => {
           if (!speechSynthesis.speaking ) {
 			reading = true;
 			  speechSynthesis.cancel();
+			  mIndex=null;
 			  readSentence();
 		   } else {
 			reading = false;
