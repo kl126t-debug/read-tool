@@ -733,7 +733,7 @@ words.forEach((word, index) => {
           } else if (content.includes("\n<end>已深度思考")) {
             isThinking = false;
           } else if (!isThinking) {
-            finalText += content;
+            finalText += '\n ' +content;
           }
         }
       }
