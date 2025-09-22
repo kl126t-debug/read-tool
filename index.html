@@ -455,11 +455,11 @@ function initRecorder() {
         serverParams: {
           coreType: "en.sent.pron",
           refText: thisSentence,
-          playDing: false, 
           rank: 100,
           attachAudioUrl: 1
         },
         duration: 10000, // 最大录音时长（毫秒）
+        playDing: false, 
         onScore: result => {
          // console.log("✅ 测评原始 JSON：", result);
          formatResult(result);
