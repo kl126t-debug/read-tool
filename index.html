@@ -529,18 +529,22 @@ function extractHitWordGroups(words) {
   if (matchlist.length===1){
   	mpiece=matchlist[0].join(" ");
   }
-  if(mpiece && thisSentence){
-  const queryText=`简要讲解句子中${mpiece}的用法，${thisSentence}`;
-  thisSentence=null;
-  client.sendMessage(queryText).then(result=>{
-      const utterance = new SpeechSynthesisUtterance(result);
-      
-      utterance.rate = readSpeed;
-      utterance.volume = volume;
-      synth.speak(utterance);	 
-      document.getElementById("result").textContent = result;
-  	});
-  
+  if(thisSentence){
+	  if(mpiece ){
+	  const queryText=`简述${mpiece}在句中的用法，${thisSentence}`;
+	  }else {
+	  const queryText=`讲解这句话：${thisSentence}`;
+	  }
+	  thisSentence=null;
+	  client.sendMessage(queryText).then(result=>{
+	      const utterance = new SpeechSynthesisUtterance(result);
+	      
+	      utterance.rate = readSpeed;
+	      utterance.volume = volume;
+	      synth.speak(utterance);	 
+	      document.getElementById("result").textContent = result;
+	  	});
+    }
   }
 
   
@@ -832,7 +836,7 @@ document.addEventListener('keydown',  (e)=> {
       keyDownTime = now;
       if(isLongPress ===false && longPressTimer===null){
 	      longPressTimer = setTimeout(() => {
-	        	
+	        	synth.pause();
 	              isLongPress = true;
 	        	  startRbtn(); //开始录音
 	            
