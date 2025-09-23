@@ -531,10 +531,11 @@ function extractHitWordGroups(words) {
   	mpiece=matchlist[0].join(" ");
   }
   if(thisSentence){
+  	let queryText="";
 	  if(mpiece ){
-	  const queryText=`简述${mpiece}在句中的用法，${thisSentence}`;
+	   queryText=`简述${mpiece}在句中的用法，${thisSentence}`;
 	  }else {
-	  const queryText=`讲解这句话：${thisSentence}`;
+	   queryText=`讲解这句话：${thisSentence}`;
 	  }
 	  thisSentence=null;
 	  client.sendMessage(queryText).then(result=>{
