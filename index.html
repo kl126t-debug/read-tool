@@ -720,14 +720,14 @@ words.forEach((word, index) => {
     const decoder = new TextDecoder("utf-8");
     let finalText = "";
     let isThinking = false;
-    let counter=0;
-    while (counter<=3) {
+    
+    while (true) {
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = decoder.decode(value, { stream: true });
       const lines = chunk.split("\n").map(line => line.trim()).filter(Boolean);
       for (const line of lines) {
-      	if(counter>3) break;
+      	
         const content = this.extractContent(line);
         if (content && typeof content === 'string') {
           if (content.startsWith("```ys_think")) {
@@ -735,7 +735,7 @@ words.forEach((word, index) => {
           } else if (content.includes("\n<end>已深度思考")) {
             isThinking = false;
           } else if (!isThinking) {
-          	counter+=1;
+          	
             finalText += content;
           }
         }
