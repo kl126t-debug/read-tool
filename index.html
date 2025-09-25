@@ -533,9 +533,9 @@ function extractHitWordGroups(words) {
   if(thisSentence){
   	let queryText="";
 	  if(mpiece ){
-	   queryText=`简述${mpiece}在句中的用法，${thisSentence}`;
+	   queryText=`讲解${mpiece}的用法，${thisSentence}`;
 	  }else {
-	   queryText=`讲解这句话：${thisSentence}`;
+	   queryText=`讲解英语用法：${thisSentence}`;
 	  }
 	  thisSentence=null;
 	  client.sendMessage(queryText).then(result=>{
@@ -718,7 +718,10 @@ words.forEach((word, index) => {
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder("utf-8");
-    let finalText = "";
+    let buffer = "";
+	let buf = '';          // 一直拼
+	let para = 0;          // 换行事件计数
+	let isreply=true;
     let isThinking = false;
     
     while (true) {
@@ -736,13 +739,30 @@ words.forEach((word, index) => {
             isThinking = false;
           } else if (!isThinking) {
           	
-            finalText += content;
-          }
-        }
-      }
-    }
+            buffer += content;
 
-    return this.md2tts(finalText);
+		buf += content;
+		
+		//console.log(JSON.stringify(buf));   // 若输出 "line1\\nline2" 就是假 \n
+		if(buf.includes('\n')){
+		  if(isreply && buf.startsWith("好的")){
+		    isreply=false;buf="";buffer="";
+		}else{
+		para++;                          // 算一次
+		     
+		  buf = '';    
+		  if (para >= 3) {
+		    await reader.cancel();
+		    break;
+		  }
+		}
+		  }
+		  }
+		}}}
+		
+		          
+		
+    return this.md2tts(buffer);
   }
 
   extractContent(line) {
