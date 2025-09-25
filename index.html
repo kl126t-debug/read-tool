@@ -811,12 +811,12 @@ words.forEach((word, index) => {
         if (!isLongPress && pressDuration < longPressThreshold) {
           if (!speechSynthesis.speaking ) {
 			//reading = true;
-			  speechSynthesis.cancel();
+			  
 			  mIndex=null;
 			  readSentence();
 		   } else {
 		//	reading = false;
-		    synth.pause();
+		    
 		    return; // 特殊处理完就返回，不触发朗读逻辑
 		   }
         }else{
@@ -858,9 +858,10 @@ document.addEventListener('keydown',  (e)=> {
     case '0':
       e.preventDefault(); // 防止页面滚动
       keyDownTime = now;
+	  speechSynthesis.cancel();  
       if(isLongPress ===false && longPressTimer===null){
 	      longPressTimer = setTimeout(() => {
-	        	synth.pause();
+	        	
 	              isLongPress = true;
 	        	  startRbtn(); //开始录音
 	            
@@ -915,3 +916,4 @@ document.addEventListener('keydown',  (e)=> {
 </body>
 
 </html>
+
