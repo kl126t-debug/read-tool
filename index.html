@@ -537,7 +537,7 @@ function extractHitWordGroups(words) {
 	  }else {
 	   queryText=`讲解英语用法：${thisSentence}`;
 	  }
-	  thisSentence=null;
+	 // thisSentence=null;
 	  client.sendMessage(queryText).then(result=>{
 	      const utterance = new SpeechSynthesisUtterance(result);
 	      
@@ -739,17 +739,19 @@ words.forEach((word, index) => {
             isThinking = false;
           } else if (!isThinking) {
           	
-            buffer += content;
+            
 
 		buf += content;
 		
 		//console.log(JSON.stringify(buf));   // 若输出 "line1\\nline2" 就是假 \n
 		if(buf.includes('\n')){
 		  if(isreply && buf.startsWith("好的")){
-		    isreply=false;buf="";buffer="";
-		}else{
+		    isreply=false;buf="";
+		}else if(buf.includes(thisSentence)){
+            buf="";
+      }else{
 		para++;                          // 算一次
-		     
+		  buffer += buf;   
 		  buf = '';    
 		  if (para >= 5) {
 		    await reader.cancel();
@@ -916,4 +918,3 @@ document.addEventListener('keydown',  (e)=> {
 </body>
 
 </html>
-
