@@ -588,7 +588,7 @@ words.forEach((word, index) => {
 }     
 
  class XiaobaiChatClient {
-  constructor(apiKey, botId = 200006, modelId = "deepseekV3_1") {
+  constructor(apiKey, botId = 200006, modelId = "xiaobaiOSS") {
     this.apiKey = apiKey;
     this.botId = botId;
     this.modelId = modelId;
@@ -840,6 +840,7 @@ document.addEventListener('keydown',  (e)=> {
     case 'Enter': 
       e.preventDefault(); // 如果你不希望触发默认行为（如提交表单）
       mIndex=null;
+      thisSentence=null;
       currentIndex = Math.min(sentences.length - 1, currentIndex + 2);
       
       break;
