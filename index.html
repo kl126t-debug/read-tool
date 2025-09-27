@@ -434,8 +434,7 @@ function initRecorder() {
     }
 
       function startRbtn(){
-      	if(mIndex)
-      	 thisSentence = sentences[mIndex];
+      	
 
       if (!thisSentence) {
         
@@ -840,9 +839,9 @@ document.addEventListener('keydown',  (e)=> {
     case 'Enter': 
       e.preventDefault(); // 如果你不希望触发默认行为（如提交表单）
       mIndex=null;
-      thisSentence=null;
-      currentIndex = Math.min(sentences.length - 1, currentIndex + 2);
       
+      currentIndex = Math.min(sentences.length - 1, currentIndex + 2);
+      thisSentence=sentences[currentIndex];
       break;
   
     case '1':
