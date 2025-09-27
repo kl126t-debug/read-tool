@@ -750,8 +750,8 @@ words.forEach((word, index) => {
 		}else if(buf.includes(thisSentence)){
             buf="";
       }else{
-      	if (buf.length>5) para++;                          // 算一次
-		  buffer += buf;   
+      	if (buf.length>5){ para++;                          // 算一次
+		  buffer += buf; }  
 		  buf = '';    
 		  if (para >= 5) {
 		    await reader.cancel();
