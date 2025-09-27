@@ -750,7 +750,8 @@ words.forEach((word, index) => {
 		}else if(buf.includes(thisSentence)){
             buf="";
       }else{
-      	if (buf.length>5){buffer += buf;   para++;}                          // 算一次
+      buffer += buf;
+			  para++;                        // 算一次
 		   
 		  buf = '';    
 		  if (para >= 5) {
@@ -919,4 +920,5 @@ document.addEventListener('keydown',  (e)=> {
 </body>
 
 </html>
+
 
